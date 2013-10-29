@@ -38,6 +38,11 @@ public class ScheduledExecutorServiceTest {
 
   private static void scheduleAtFixedRate() {
     scheduledFuture = getScheduledFuture();
+    try {
+      scheduledExecutorService.awaitTermination(3,TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+    }
 
     scheduledExecutorService2.scheduleAtFixedRate(new Runnable() {
       public void run() {
@@ -46,8 +51,19 @@ public class ScheduledExecutorServiceTest {
           long delayMillis = System.currentTimeMillis() - stRunTime;
           System.out.println("Delay : " + delayMillis);
           // if over then 10 sec
-          if (delayMillis > 10 * 2000) {
-            scheduledFuture.cancel(true);
+          if (delayMillis > 10 * 300) {
+            System.out.println("TimeOut");
+            System.out.println("is Cancel : " + scheduledFuture.cancel(true));
+            scheduledFuture = null;
+            scheduledExecutorService.shutdown();
+            System.out.println(scheduledExecutorService.isShutdown());
+            scheduledExecutorService = null;
+            scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+            try {
+              Thread.sleep(3000);
+            } catch (InterruptedException e) {
+              e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
             scheduledFuture = getScheduledFuture();
           }
         } else {
@@ -57,21 +73,22 @@ public class ScheduledExecutorServiceTest {
     }, 5, 3, TimeUnit.SECONDS);
 
   }
-
+  static int count = 0;
   private static ScheduledFuture getScheduledFuture() {
     return scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
       @Override
       public void run() {
+        count++;
         stRunTime = System.currentTimeMillis();
         isCompleted = false;
-        System.out.println("Executed!!");
+        System.out.println(count+" : Executed!!");
         try {
           Thread.sleep(10000);
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
         isCompleted = true;
-        System.out.println("Working Done");
+        System.out.println(count+" : Working Done");
       }
     }, 1, 2, TimeUnit.SECONDS);
   }
